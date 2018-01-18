@@ -125,6 +125,9 @@ users_{{ name }}_user:
     {% if not user.get('createhome', True) %}
     - createhome: False
     {% endif %}
+    {% if not user.get('unique', True) %}
+    - unique: False
+    {% endif %}
     {% if 'expire' in user -%}
         {% if grains['kernel'].endswith('BSD') and
             user['expire'] < 157766400 %}
