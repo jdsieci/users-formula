@@ -67,6 +67,7 @@ users_{{ name }}_user:
     - user: {{ user.get('homedir_owner', name) }}
     - group: {{ user.get('homedir_group', user_group) }}
     - mode: {{ user.get('user_dir_mode', '0750') }}
+    - makedirs: True
     - require:
       - user: users_{{ name }}_user
       - group: {{ user_group }}
@@ -201,7 +202,12 @@ users_{{ name }}_{{ key_name }}_key:
     - mode: 600
       {% endif %}
     - show_diff: False
+    {%- set key_value = salt['pillar.get']('users:'+name+':ssh_keys:'+_key) %}
+    {%- if 'salt://' in key_value[:7] %}
+    - source: {{ key_value }}
+    {%- else %}
     - contents_pillar: users:{{ name }}:ssh_keys:{{ _key }}
+    {%- endif %}
     - require:
       - user: users_{{ name }}_user
       {% for group in user.get('groups', []) %}
@@ -454,10 +460,6 @@ users_googleauth-{{ svc }}-{{ name }}:
 {%- endfor %}
 {%- endif %}
 
-#
-# if not salt['cmd.has_exec']('git')
-# fails even if git is installed
-#
 # this doesn't work (Salt bug), therefore need to run state.apply twice
 #include:
 #  - users
@@ -468,6 +470,7 @@ users_googleauth-{{ svc }}-{{ name }}:
 #      - sls: users
 #
 {% if 'gitconfig' in user %}
+{% if salt['cmd.has_exec']('git') %}
 {% for key, value in user['gitconfig'].items() %}
 users_{{ name }}_user_gitconfig_{{ loop.index0 }}:
   {% if grains['saltversioninfo'] >= [2015, 8, 0, 0] %}
@@ -484,6 +487,7 @@ users_{{ name }}_user_gitconfig_{{ loop.index0 }}:
     - is_global: True
     {% endif %}
 {% endfor %}
+{% endif %}
 {% endif %}
 
 {% endfor %}
