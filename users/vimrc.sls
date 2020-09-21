@@ -1,4 +1,7 @@
 {% from "users/map.jinja" import users with context %}
+
+{% if salt['pillar.get']('users-formula:use_vim_formula', False) %}
+
 include:
   - users
   - vim
@@ -28,3 +31,5 @@ users_{{ name }}_user_vimrc:
       - salt://users/files/vimrc/vimrc
 {% endif %}
 {% endfor %}
+
+{% endif %}
